@@ -202,3 +202,52 @@ improved.
 ## License
 
 MIT
+
+---
+
+## Run it yourself
+
+```bash
+git clone https://github.com/hammas159/qlora-finetune-suite
+cd qlora-finetune-suite
+
+uv sync --group dev      # or: pip install -e ".[dev]"
+make test                # 75 tests, no GPU, no model, no download
+make plan                # will my config fit? how many steps?
+```
+
+`make plan` is the point — it answers before you spend the hour:
+
+```
+=== Qwen2.5-7B (7.62B params) ===
+  largest config fitting 16 GB: r=64  batch=8  (11.95 GB, 4.05 GB spare)
+  plan: {"effective_batch_size": 32, "total_steps": 42, "warmup_steps": 4, ...}
+  data: {"train": 450, "eval": 50, "supervised_fraction": 0.2857}
+```
+
+To actually train, add the stack:
+
+```bash
+make install-train       # torch, transformers, peft, bitsandbytes
+```
+
+## Problems hit while building this
+
+**Parameter counts were 25% high on small models.** Counting the input embedding and the
+output head separately overstates any model that *ties* them — and small models almost
+always do. On a 0.5B model with a 150k vocabulary the embedding is a large share of the
+total, so `Qwen2.5-0.5B` came out at 0.63B instead of 0.49B, and every VRAM figure
+derived from it was wrong in the same direction. *Fixed* with a `tie_word_embeddings`
+flag; counts now land within 1% of published figures (0.49B, 7.62B, 8.03B).
+
+**Two failures were my tests, not the code, and it is worth being precise about which.**
+One fixture asserted a fine-tune "improved" on data where the mean had actually got
+worse — I had wanted a case where the average rises while one example regresses, and
+built the opposite. The other was a shim in the offline test runner that ignored
+`pytest.approx`'s relative tolerance, so an exact-to-three-decimals comparison failed on
+the fourth. Both are recorded because *"the test was wrong"* and *"the code was wrong"*
+are different claims and conflating them erodes trust in the suite.
+
+**No fine-tune has actually been run.** The arithmetic is verified to the published
+figures; the training loop is not included and no model has been trained with this. That
+is stated here rather than left for someone to discover.
