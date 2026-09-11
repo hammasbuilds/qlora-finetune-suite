@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # The core is arithmetic: no GPU, no model, no download. That is a property of the
+    # design - the mistakes that ruin a fine-tune are all made before the GPU is
+    # touched, so they should be checkable without one.
+    strategy:
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install pytest ruff
+      - run: ruff check src tests
+      - run: ruff format --check src tests
+      - run: pip install -e .
+      - run: pytest -q

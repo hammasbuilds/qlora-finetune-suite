@@ -1,0 +1,40 @@
+[project]
+name = "qlora-finetune-suite"
+version = "0.1.0"
+description = "QLoRA fine-tuning: VRAM budgeting, loss masking, leak-free splits, schedules, and before/after evaluation."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["qlora", "lora", "peft", "fine-tuning", "llm"]
+# The core is pure arithmetic and runs anywhere. Training needs the stack.
+dependencies = []
+
+[project.optional-dependencies]
+train = [
+    "torch>=2.6",
+    "transformers>=4.47",
+    "peft>=0.14",
+    "datasets>=3.2",
+    "accelerate>=1.2",
+    "bitsandbytes>=0.45; platform_system != 'Darwin'",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/qlora"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
