@@ -51,7 +51,7 @@ class TrainingConfig:
     micro_batch_size: int = 4
     gradient_accumulation: int = 4
     epochs: float = 3.0
-    learning_rate: float | None = None     # None derives it from the rank
+    learning_rate: float | None = None  # None derives it from the rank
     min_lr_ratio: float = 0.1
 
     load_in_4bit: bool = True
@@ -108,7 +108,8 @@ class RunReport:
 
 
 def plan_run(
-    examples: Sequence[Example], config: TrainingConfig,
+    examples: Sequence[Example],
+    config: TrainingConfig,
     shape: ModelShape | None = None,
 ) -> RunReport:
     """Everything computable before a GPU is touched.
@@ -126,8 +127,10 @@ def plan_run(
     # The stand-in tokenizer is fine here: this is index arithmetic, and the real
     # tokenizer changes the counts by a constant factor, not the conclusions.
     _rows, data_stats = prepare(
-        train_examples, whitespace_tokenizer,
-        template=config.template, max_length=config.max_length,
+        train_examples,
+        whitespace_tokenizer,
+        template=config.template,
+        max_length=config.max_length,
     )
     report.data = {**split_stats, **data_stats}
 
@@ -181,7 +184,7 @@ def train(  # pragma: no cover - requires a GPU and a model
     report = plan_run(examples, config)
     output = Path(config.output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    report.save(output / "report.json")   # written before anything can fail
+    report.save(output / "report.json")  # written before anything can fail
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(config.base_model)
@@ -231,8 +234,10 @@ def train(  # pragma: no cover - requires a GPU and a model
             return tokenizer(text, add_special_tokens=False)["input_ids"]
 
         rows, stats = prepare(
-            train_examples, encode,
-            template=config.template, max_length=config.max_length,
+            train_examples,
+            encode,
+            template=config.template,
+            max_length=config.max_length,
         )
         report.data.update(stats)
 
@@ -241,9 +246,7 @@ def train(  # pragma: no cover - requires a GPU and a model
         report.eval_before = evaluate_model(model, tokenizer, eval_examples, config)
 
         report.completed = True
-        report.error = (
-            "adapters attached and data prepared; attach a trainer loop to fit"
-        )
+        report.error = "adapters attached and data prepared; attach a trainer loop to fit"
 
     except Exception as exc:
         report.error = f"{type(exc).__name__}: {exc}"

@@ -138,8 +138,12 @@ class TokenisedExample:
 
 
 def tokenise(
-    example: Example, tokenizer: Tokenizer, *, template: str = "chatml",
-    max_length: int = 1024, truncate: str = "right",
+    example: Example,
+    tokenizer: Tokenizer,
+    *,
+    template: str = "chatml",
+    max_length: int = 1024,
+    truncate: str = "right",
 ) -> TokenisedExample:
     """Tokenise one example and mask the prompt out of the loss."""
     prompt, completion = render(example, template)
@@ -161,14 +165,17 @@ def tokenise(
             input_ids = input_ids[:max_length]
             labels = labels[:max_length]
 
-    return TokenisedExample(
-        input_ids=input_ids, labels=labels, prompt_length=len(prompt_ids)
-    )
+    return TokenisedExample(input_ids=input_ids, labels=labels, prompt_length=len(prompt_ids))
 
 
 def prepare(
-    examples: Sequence[Example], tokenizer: Tokenizer, *, template: str = "chatml",
-    max_length: int = 1024, truncate: str = "right", drop_unusable: bool = True,
+    examples: Sequence[Example],
+    tokenizer: Tokenizer,
+    *,
+    template: str = "chatml",
+    max_length: int = 1024,
+    truncate: str = "right",
+    drop_unusable: bool = True,
 ) -> tuple[list[TokenisedExample], dict]:
     """Tokenise a dataset, and report what was lost.
 
@@ -177,8 +184,7 @@ def prepare(
     underperforms mysteriously.
     """
     rows = [
-        tokenise(e, tokenizer, template=template, max_length=max_length,
-                 truncate=truncate)
+        tokenise(e, tokenizer, template=template, max_length=max_length, truncate=truncate)
         for e in examples
     ]
     unusable = [r for r in rows if not r.is_usable]
@@ -222,7 +228,10 @@ def deduplicate(examples: Sequence[Example]) -> tuple[list[Example], int]:
 
 
 def split(
-    examples: Sequence[Example], *, eval_fraction: float = 0.1, seed: int = 0,
+    examples: Sequence[Example],
+    *,
+    eval_fraction: float = 0.1,
+    seed: int = 0,
     deduplicate_first: bool = True,
 ) -> tuple[list[Example], list[Example], dict]:
     """Train/eval split with no example on both sides.
@@ -244,13 +253,17 @@ def split(
     train_fingerprints = {e.fingerprint for e in training}
     overlap = sum(1 for e in evaluation if e.fingerprint in train_fingerprints)
 
-    return training, evaluation, {
-        "train": len(training),
-        "eval": len(evaluation),
-        "duplicates_removed": removed,
-        # Must be zero. Asserted in the tests rather than trusted.
-        "cross_split_duplicates": overlap,
-    }
+    return (
+        training,
+        evaluation,
+        {
+            "train": len(training),
+            "eval": len(evaluation),
+            "duplicates_removed": removed,
+            # Must be zero. Asserted in the tests rather than trusted.
+            "cross_split_duplicates": overlap,
+        },
+    )
 
 
 # --- packing -----------------------------------------------------------------------
@@ -263,9 +276,7 @@ class PackedBatch:
     boundaries: list[int] = field(default_factory=list)
 
 
-def pack(
-    rows: Sequence[TokenisedExample], *, max_length: int = 1024
-) -> list[PackedBatch]:
+def pack(rows: Sequence[TokenisedExample], *, max_length: int = 1024) -> list[PackedBatch]:
     """Concatenate short examples up to the sequence limit.
 
     On a dataset of short examples, padding wastes most of the compute: a batch padded

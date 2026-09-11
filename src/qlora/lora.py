@@ -28,7 +28,12 @@ from dataclasses import dataclass, field
 
 # Bytes per parameter by storage format.
 DTYPE_BYTES = {
-    "fp32": 4.0, "fp16": 2.0, "bf16": 2.0, "int8": 1.0, "nf4": 0.5, "fp4": 0.5,
+    "fp32": 4.0,
+    "fp16": 2.0,
+    "bf16": 2.0,
+    "int8": 1.0,
+    "nf4": 0.5,
+    "fp4": 0.5,
 }
 
 # Attention and MLP projections, by architecture family. Naming differs; the targets
@@ -61,7 +66,7 @@ class ModelShape:
     num_attention_heads: int
     intermediate_size: int
     vocab_size: int
-    num_key_value_heads: int | None = None   # None means multi-head, not grouped-query
+    num_key_value_heads: int | None = None  # None means multi-head, not grouped-query
     family: str = "llama"
     # Small models usually share one matrix between the input embedding and the output
     # head. Counting it twice overstates a 0.5B model by around 25%, because on a small
@@ -89,13 +94,13 @@ class ModelShape:
         kv_size = self.num_key_value_heads * self.head_dim
 
         attention = (
-            self.hidden_size * self.hidden_size        # q
-            + self.hidden_size * kv_size               # k
-            + self.hidden_size * kv_size               # v
-            + self.hidden_size * self.hidden_size      # o
+            self.hidden_size * self.hidden_size  # q
+            + self.hidden_size * kv_size  # k
+            + self.hidden_size * kv_size  # v
+            + self.hidden_size * self.hidden_size  # o
         )
-        mlp = 3 * self.hidden_size * self.intermediate_size   # gate, up, down
-        per_layer = attention + mlp + 2 * self.hidden_size     # two RMSNorms
+        mlp = 3 * self.hidden_size * self.intermediate_size  # gate, up, down
+        per_layer = attention + mlp + 2 * self.hidden_size  # two RMSNorms
 
         embeddings = self.vocab_size * self.hidden_size
         lm_head = 0 if self.tie_word_embeddings else self.vocab_size * self.hidden_size
@@ -182,8 +187,12 @@ class MemoryEstimate:
     @property
     def total_gb(self) -> float:
         return round(
-            self.base_weights_gb + self.adapter_gb + self.gradients_gb
-            + self.optimizer_gb + self.activations_gb + self.overhead_gb,
+            self.base_weights_gb
+            + self.adapter_gb
+            + self.gradients_gb
+            + self.optimizer_gb
+            + self.activations_gb
+            + self.overhead_gb,
             3,
         )
 
@@ -223,7 +232,7 @@ def estimate_memory(
     if base_dtype not in DTYPE_BYTES:
         raise ConfigError(f"unknown dtype {base_dtype!r}")
 
-    giga = 1024 ** 3
+    giga = 1024**3
     base_parameters = shape.total_parameters
 
     base_weights = base_parameters * DTYPE_BYTES[base_dtype] / giga
@@ -263,7 +272,7 @@ def estimate_memory(
         gradients_gb=round(gradients, 4),
         optimizer_gb=round(optimizer_gb, 4),
         activations_gb=round(activations + logits, 3),
-        overhead_gb=0.8,   # CUDA context, kernels, fragmentation
+        overhead_gb=0.8,  # CUDA context, kernels, fragmentation
     )
 
 
@@ -281,12 +290,13 @@ def largest_config_that_fits(
         for batch_size in (8, 4, 2, 1):
             config = LoRAConfig(r=r, alpha=2 * r)
             estimate = estimate_memory(
-                shape, config, batch_size=batch_size,
-                sequence_length=sequence_length, **kw
+                shape, config, batch_size=batch_size, sequence_length=sequence_length, **kw
             )
             if estimate.fits_in(vram_gb):
                 candidate = {
-                    "r": r, "alpha": 2 * r, "batch_size": batch_size,
+                    "r": r,
+                    "alpha": 2 * r,
+                    "batch_size": batch_size,
                     "sequence_length": sequence_length,
                     "estimated_gb": estimate.total_gb,
                     "headroom_gb": round(vram_gb - estimate.total_gb, 3),

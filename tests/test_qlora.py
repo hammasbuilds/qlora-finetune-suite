@@ -40,20 +40,31 @@ from qlora.schedule import (
 from qlora.train import TrainingConfig, plan_run
 
 QWEN_7B = ModelShape(
-    "Qwen2.5-7B", hidden_size=3584, num_layers=28, num_attention_heads=28,
-    intermediate_size=18944, vocab_size=152064, num_key_value_heads=4, family="qwen2",
+    "Qwen2.5-7B",
+    hidden_size=3584,
+    num_layers=28,
+    num_attention_heads=28,
+    intermediate_size=18944,
+    vocab_size=152064,
+    num_key_value_heads=4,
+    family="qwen2",
 )
 QWEN_05B = ModelShape(
-    "Qwen2.5-0.5B", hidden_size=896, num_layers=24, num_attention_heads=14,
-    intermediate_size=4864, vocab_size=151936, num_key_value_heads=2, family="qwen2",
+    "Qwen2.5-0.5B",
+    hidden_size=896,
+    num_layers=24,
+    num_attention_heads=14,
+    intermediate_size=4864,
+    vocab_size=151936,
+    num_key_value_heads=2,
+    family="qwen2",
     tie_word_embeddings=True,
 )
 
 
 def examples(n: int = 100) -> list[Example]:
     return [
-        Example(instruction=f"Question number {i} about a topic",
-                response=f"Answer number {i}")
+        Example(instruction=f"Question number {i} about a topic", response=f"Answer number {i}")
         for i in range(n)
     ]
 
@@ -74,15 +85,19 @@ class TestModelShape:
         """On a small model with a 150k vocabulary, the embedding is a large fraction
         of the total - double counting overstates it by around a quarter."""
         tied = QWEN_05B.total_parameters
-        untied = ModelShape(
-            **{**QWEN_05B.__dict__, "tie_word_embeddings": False}
-        ).total_parameters
+        untied = ModelShape(**{**QWEN_05B.__dict__, "tie_word_embeddings": False}).total_parameters
         assert untied > tied * 1.2
 
     def test_an_indivisible_head_count_is_refused(self):
         with pytest.raises(ConfigError):
-            ModelShape("bad", hidden_size=100, num_layers=1, num_attention_heads=7,
-                       intermediate_size=100, vocab_size=100)
+            ModelShape(
+                "bad",
+                hidden_size=100,
+                num_layers=1,
+                num_attention_heads=7,
+                intermediate_size=100,
+                vocab_size=100,
+            )
 
 
 class TestLoRAConfig:
@@ -127,9 +142,9 @@ class TestAdapterParameters:
 
     def test_training_embeddings_dominates_on_a_small_model(self):
         without = adapter_parameters(QWEN_05B, LoRAConfig(r=16))["trainable"]
-        with_embeddings = adapter_parameters(
-            QWEN_05B, LoRAConfig(r=16, train_embeddings=True)
-        )["trainable"]
+        with_embeddings = adapter_parameters(QWEN_05B, LoRAConfig(r=16, train_embeddings=True))[
+            "trainable"
+        ]
         assert with_embeddings > without * 5
 
 
@@ -198,7 +213,7 @@ class TestLossMasking:
 
     def test_response_tokens_are_supervised(self):
         row = tokenise(Example("What is 2+2?", "Four."), whitespace_tokenizer)
-        assert all(label != IGNORE_INDEX for label in row.labels[row.prompt_length:])
+        assert all(label != IGNORE_INDEX for label in row.labels[row.prompt_length :])
 
     def test_labels_align_with_inputs(self):
         row = tokenise(Example("A question here", "An answer"), whitespace_tokenizer)
@@ -323,13 +338,13 @@ class TestScheduling:
     def test_effective_batch_size_multiplies_everything(self):
         """Halving the micro-batch to fit a longer sequence and forgetting to double
         accumulation silently halves the effective batch."""
-        plan = StepPlan(dataset_size=1000, micro_batch_size=4,
-                        gradient_accumulation=8, epochs=1, devices=2)
+        plan = StepPlan(
+            dataset_size=1000, micro_batch_size=4, gradient_accumulation=8, epochs=1, devices=2
+        )
         assert plan.effective_batch_size == 64
 
     def test_step_counts_follow_from_it(self):
-        plan = StepPlan(dataset_size=1000, micro_batch_size=4,
-                        gradient_accumulation=4, epochs=3)
+        plan = StepPlan(dataset_size=1000, micro_batch_size=4, gradient_accumulation=4, epochs=3)
         assert plan.steps_per_epoch == 62
         assert plan.total_steps == 186
 
@@ -337,8 +352,7 @@ class TestScheduling:
         "kwargs", [{"dataset_size": 0}, {"micro_batch_size": 0}, {"epochs": 0}]
     )
     def test_invalid_plans_are_refused(self, kwargs):
-        base = {"dataset_size": 10, "micro_batch_size": 1,
-                "gradient_accumulation": 1, "epochs": 1}
+        base = {"dataset_size": 10, "micro_batch_size": 1, "gradient_accumulation": 1, "epochs": 1}
         with pytest.raises(ScheduleError):
             StepPlan(**{**base, **kwargs})
 
@@ -355,8 +369,8 @@ class TestScheduling:
             linear_warmup_cosine_decay(s, total_steps=100, warmup=10, peak_lr=1e-4)
             for s in range(100)
         ]
-        assert values[0] < values[9]        # warming up
-        assert values[9] > values[99]       # then decaying
+        assert values[0] < values[9]  # warming up
+        assert values[9] > values[99]  # then decaying
 
     def test_the_peak_is_reached_at_the_end_of_warmup(self):
         peak = linear_warmup_cosine_decay(9, total_steps=100, warmup=10, peak_lr=1e-4)
@@ -407,8 +421,7 @@ class TestEvaluation:
             evaluate(["a"], ["a"], scorer="vibes")
 
     def test_a_comparison_reports_the_delta(self):
-        result = compare(["wrong", "wrong"], ["right answer", "wrong"],
-                         ["right answer", "wrong"])
+        result = compare(["wrong", "wrong"], ["right answer", "wrong"], ["right answer", "wrong"])
         assert result.improved
         assert result.delta > 0
 
@@ -421,7 +434,7 @@ class TestEvaluation:
         unqualified win.
         """
         references = ["right answer", "correct answer here"]
-        before = ["", "correct answer here"]      # scores 0.0 and 1.0
+        before = ["", "correct answer here"]  # scores 0.0 and 1.0
         after = ["right answer", "correct answer"]  # scores 1.0 and 0.8
 
         result = compare(before, after, references)

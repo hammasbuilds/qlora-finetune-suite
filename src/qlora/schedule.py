@@ -79,7 +79,11 @@ def warmup_steps(total_steps: int, *, fraction: float = 0.03, minimum: int = 20)
 
 
 def linear_warmup_cosine_decay(
-    step: int, *, total_steps: int, warmup: int, peak_lr: float,
+    step: int,
+    *,
+    total_steps: int,
+    warmup: int,
+    peak_lr: float,
     min_lr_ratio: float = 0.1,
 ) -> float:
     """The standard schedule for fine-tuning: linear warmup, then cosine decay.

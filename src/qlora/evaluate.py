@@ -101,11 +101,13 @@ def evaluate(
         raise ValueError(f"unknown scorer {scorer!r}; have {sorted(SCORERS)}")
 
     fn = SCORERS[scorer]
-    scores = [fn(p, r) for p, r in zip(predictions, references)]
+    scores = [fn(p, r) for p, r in zip(predictions, references, strict=False)]
     return EvalResult(
-        scorer=scorer, n=len(scores),
+        scorer=scorer,
+        n=len(scores),
         score=round(sum(scores) / len(scores), 6) if scores else 0.0,
-        per_example=scores, predictions=list(predictions),
+        per_example=scores,
+        predictions=list(predictions),
     )
 
 
@@ -130,7 +132,10 @@ class Comparison:
         one that mattered.
         """
         return [
-            i for i, (b, a) in enumerate(zip(self.before.per_example, self.after.per_example))
+            i
+            for i, (b, a) in enumerate(
+                zip(self.before.per_example, self.after.per_example, strict=False)
+            )
             if a < b
         ]
 
@@ -146,15 +151,16 @@ class Comparison:
             "regressed_examples": len(regressed),
             # The honest headline. A model better on average and worse on a fifth of the
             # set is a different result from one better everywhere.
-            "regression_rate": (
-                round(len(regressed) / self.before.n, 4) if self.before.n else 0.0
-            ),
+            "regression_rate": (round(len(regressed) / self.before.n, 4) if self.before.n else 0.0),
         }
 
 
 def compare(
-    before_predictions: Sequence[str], after_predictions: Sequence[str],
-    references: Sequence[str], *, scorer: str = "token_f1",
+    before_predictions: Sequence[str],
+    after_predictions: Sequence[str],
+    references: Sequence[str],
+    *,
+    scorer: str = "token_f1",
 ) -> Comparison:
     return Comparison(
         before=evaluate(before_predictions, references, scorer=scorer),
@@ -163,7 +169,12 @@ def compare(
 
 
 def evaluate_model(  # pragma: no cover - requires a model
-    model, tokenizer, examples: Sequence[Example], config, *, scorer: str = "token_f1",
+    model,
+    tokenizer,
+    examples: Sequence[Example],
+    config,
+    *,
+    scorer: str = "token_f1",
     max_new_tokens: int = 128,
 ) -> dict:
     """Generate on the eval set and score it.
@@ -182,11 +193,13 @@ def evaluate_model(  # pragma: no cover - requires a model
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():
             generated = model.generate(
-                **inputs, max_new_tokens=max_new_tokens, do_sample=False,
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
                 pad_token_id=tokenizer.pad_token_id,
             )
         text = tokenizer.decode(
-            generated[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
+            generated[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
         )
         predictions.append(text)
 
