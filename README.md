@@ -1,4 +1,4 @@
-# qlora-finetune-suite
+# qlora-finetune-suite (PyTorch, Transformers, PEFT)
 
 [![ci](https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
