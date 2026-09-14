@@ -1,18 +1,45 @@
-# qlora-finetune-suite (PyTorch, Transformers, PEFT)
+<h1 align="center">qlora-finetune-suite</h1>
+<p align="center"><i>The parts of fine-tuning that go wrong before the GPU is ever touched</i></p>
 
-[![ci](https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml)
-![python](https://img.shields.io/badge/python-3.10%2B-blue)
-![core](https://img.shields.io/badge/core-no%20GPU%20required-success)
-![license](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  <a href="#why-the-core-has-no-dependencies">Why zero deps</a> &middot;
+  <a href="#1-vram-budgeting">VRAM budgeting</a> &middot;
+  <a href="#2-loss-masking--the-bug-that-silently-ruins-instruction-tuning">Loss masking</a> &middot;
+  <a href="#3-leak-free-splits">Leak-free splits</a> &middot;
+  <a href="#5-beforeafter-evaluation">Before/after eval</a> &middot;
+  <a href="#problems-hit-while-building-this">Problems hit</a>
+</p>
 
-**The parts of fine-tuning that go wrong before the GPU is ever touched.**
-
-VRAM budgeting · loss masking · leak-free splits · schedules · before/after evaluation.
-The core is pure arithmetic and runs anywhere; only the training script needs the stack.
+<p align="center">
+  <a href="https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml"><img src="https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
+  <img src="https://img.shields.io/badge/core%20deps-zero-success" alt="deps">
+  <img src="https://img.shields.io/badge/stack-PyTorch%20%C2%B7%20Transformers%20%C2%B7%20PEFT-orange" alt="stack">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
+</p>
 
 ---
 
 ## Why the core has no dependencies
+
+```mermaid
+flowchart LR
+    D["dataset"] --> S["leak-free split"]
+    S --> M["loss masking<br/>train on completions only"]
+    M --> V["VRAM budget<br/>will it even fit?"]
+    V --> B{"fits?"}
+    B -->|"no"| A["adjust before<br/>burning GPU hours"]
+    B -->|"yes"| T["train"]
+    T --> E["before / after evaluation<br/>on the SAME held-out set"]
+
+    style A fill:#f59e0b,color:#fff
+    style E fill:#2563eb,color:#fff
+```
+
+**Every box before `train` is arithmetic**, and every one of them is a place a fine-tune
+silently goes wrong. Loss masking is the worst: get it wrong and the model trains on the
+prompt as well as the answer, and nothing errors.
+
 
 Every mistake that ruins a fine-tune is made **before** training starts, and every one of
 them is checkable in milliseconds:
@@ -198,6 +225,10 @@ improved.
   about what they measure. An LLM judge fits the same signature.
 - **No run has been completed on real data.** The arithmetic is verified; the fine-tune
   is not.
+
+## Keywords
+
+QLoRA &middot; LoRA &middot; PEFT &middot; fine-tuning &middot; instruction tuning &middot; loss masking &middot; VRAM estimation &middot; quantization &middot; 4-bit &middot; gradient checkpointing &middot; data leakage &middot; train test split &middot; learning rate schedules &middot; PyTorch &middot; Transformers &middot; parameter-efficient fine-tuning &middot; LLM training
 
 ## License
 
