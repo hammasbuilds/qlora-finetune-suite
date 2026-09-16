@@ -180,6 +180,28 @@ report.memory_estimate  # breakdown + fits_16gb
 report.data             # split sizes, truncation losses, supervised fraction
 ```
 
+---
+
+## Input
+
+![input](docs/images/input.png)
+
+## Output
+
+`make plan`
+
+![output](docs/images/output.png)
+
+*`supervised_fraction: 0.2857` is the line worth reading twice. Fewer than three tokens
+in ten carry loss; the rest are the prompt. Train on all of them and the model gets very
+good at writing the questions it was asked to answer — and the loss curve looks fine
+while it happens.*
+
+*Note that a 0.49B model and an 8.03B model both fit the same r=64 config: at 4-bit with
+LoRA, the frozen base weights are not what dominates the budget.*
+
+---
+
 ## On the training run itself
 
 The default base model is **Qwen2.5-0.5B-Instruct**, deliberately. A training script that
