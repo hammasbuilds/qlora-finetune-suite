@@ -1,4 +1,4 @@
-<h1 align="center">qlora-finetune-suite</h1>
+<h1 align="center">qlora-finetune-suite (PyTorch · Transformers · PEFT · bitsandbytes)</h1>
 <p align="center"><i>The parts of fine-tuning that go wrong before the GPU is ever touched</i></p>
 
 <p align="center">
