@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml"><img src="https://github.com/hammas159/qlora-finetune-suite/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <a href="https://github.com/hammasbuilds/qlora-finetune-suite/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/qlora-finetune-suite/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/core%20deps-zero-success" alt="deps">
   <img src="https://img.shields.io/badge/stack-PyTorch%20%C2%B7%20Transformers%20%C2%B7%20PEFT-orange" alt="stack">
@@ -261,7 +261,7 @@ MIT
 ## Run it yourself
 
 ```bash
-git clone https://github.com/hammas159/qlora-finetune-suite
+git clone https://github.com/hammasbuilds/qlora-finetune-suite
 cd qlora-finetune-suite
 
 uv sync --group dev      # or: pip install -e ".[dev]"
