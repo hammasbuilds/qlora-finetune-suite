@@ -37,4 +37,6 @@ target-version = "py310"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
+# so `pytest` works in a fresh clone, with nothing installed
+pythonpath = ["src"]
 testpaths = ["tests"]
